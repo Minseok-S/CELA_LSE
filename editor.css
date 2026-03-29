@@ -162,10 +162,13 @@ body {
 }
 
 #originalFrame {
+  position: absolute;
+  top: 0; left: 0;
   width: 100%;
   height: 100%;
   border: none;
   display: none;
+  transform-origin: top left;
 }
 
 /* Loading */
@@ -306,14 +309,73 @@ body {
   background: #fff;
 }
 
+/* Editor iframe wrap */
+.frame-zoom-wrap {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  min-height: 0;
+  background: #fff;
+}
+
 /* Editor iframe */
 #editorFrame {
-  flex: 1;
-  border: none;
+  position: absolute;
+  top: 0; left: 0;
   width: 100%;
-  min-height: 0;
+  height: 100%;
+  border: none;
   display: none;
   background: #fff;
+  transform-origin: top left;
+}
+
+/* Zoom controls */
+.zoom-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid #2d3148;
+  border-radius: 5px;
+  padding: 1px 3px;
+}
+
+.zoom-btn {
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: transparent;
+  color: #a0aec0;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  line-height: 1;
+}
+
+.zoom-btn:hover { background: rgba(255,255,255,0.12); color: #e2e8f0; }
+
+.zoom-input {
+  width: 36px;
+  font-size: 10px;
+  color: #a0aec0;
+  font-weight: 600;
+  text-align: center;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: text;
+  padding: 0;
+}
+
+.zoom-input:focus {
+  color: #e2e8f0;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
 }
 
 /* Status bar */

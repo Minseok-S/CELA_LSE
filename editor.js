@@ -172,7 +172,7 @@
     frame.srcdoc = injectHighlight(html, baseUrl);
     frame.style.display = "block";
     clickHint.classList.add("active");
-    clickBadge.classList.add("visible");
+    if (clickBadge) clickBadge.classList.add("visible");
 
     // 오른쪽: 편집기
     setupEditorFrame(html, baseUrl);
@@ -538,6 +538,103 @@
     document.body.style.userSelect = "";
     frame.style.pointerEvents = "";
     editorFrame.style.pointerEvents = "";
+  });
+
+  /* ════════════════════════════════
+     패널 줌 (확대/축소)
+  ════════════════════════════════ */
+  var origZoom = 1;
+  var editZoom = 1;
+  var ZOOM_STEP = 0.1;
+  var ZOOM_MIN = 0.3;
+  var ZOOM_MAX = 2.0;
+
+  var origZoomInput = document.getElementById("origZoomLabel");
+  var editZoomInput = document.getElementById("editZoomLabel");
+
+  function applyOrigZoom() {
+    var z = origZoom;
+    frame.style.transform = "scale(" + z + ")";
+    frame.style.width = (100 / z) + "%";
+    frame.style.height = (100 / z) + "%";
+    origZoomInput.value = Math.round(z * 100) + "%";
+  }
+
+  function applyEditZoom() {
+    var z = editZoom;
+    editorFrame.style.transform = "scale(" + z + ")";
+    editorFrame.style.width = (100 / z) + "%";
+    editorFrame.style.height = (100 / z) + "%";
+    editZoomInput.value = Math.round(z * 100) + "%";
+  }
+
+  function parseZoomInput(val) {
+    var n = parseFloat(val.replace("%", "").trim());
+    if (isNaN(n) || n <= 0) return null;
+    // 0~2 범위면 배율, 그 외는 %로 해석
+    return n <= 2 ? n : n / 100;
+  }
+
+  document.getElementById("origZoomIn").addEventListener("click", function () {
+    origZoom = Math.min(ZOOM_MAX, Math.round((origZoom + ZOOM_STEP) * 10) / 10);
+    applyOrigZoom();
+  });
+
+  document.getElementById("origZoomOut").addEventListener("click", function () {
+    origZoom = Math.max(ZOOM_MIN, Math.round((origZoom - ZOOM_STEP) * 10) / 10);
+    applyOrigZoom();
+  });
+
+  document.getElementById("editZoomIn").addEventListener("click", function () {
+    editZoom = Math.min(ZOOM_MAX, Math.round((editZoom + ZOOM_STEP) * 10) / 10);
+    applyEditZoom();
+  });
+
+  document.getElementById("editZoomOut").addEventListener("click", function () {
+    editZoom = Math.max(ZOOM_MIN, Math.round((editZoom - ZOOM_STEP) * 10) / 10);
+    applyEditZoom();
+  });
+
+  origZoomInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      var z = parseZoomInput(this.value);
+      if (z !== null) { origZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z)); }
+      applyOrigZoom();
+      this.blur();
+    } else if (e.key === "Escape") {
+      applyOrigZoom(); // 원래 값으로 복원
+      this.blur();
+    }
+  });
+
+  origZoomInput.addEventListener("focus", function () {
+    this.value = Math.round(origZoom * 100) + "";
+    this.select();
+  });
+
+  origZoomInput.addEventListener("blur", function () {
+    applyOrigZoom(); // % 표시 복원
+  });
+
+  editZoomInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      var z = parseZoomInput(this.value);
+      if (z !== null) { editZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z)); }
+      applyEditZoom();
+      this.blur();
+    } else if (e.key === "Escape") {
+      applyEditZoom();
+      this.blur();
+    }
+  });
+
+  editZoomInput.addEventListener("focus", function () {
+    this.value = Math.round(editZoom * 100) + "";
+    this.select();
+  });
+
+  editZoomInput.addEventListener("blur", function () {
+    applyEditZoom();
   });
 
   /* ════════════════════════════════

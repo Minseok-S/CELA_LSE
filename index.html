@@ -39,7 +39,18 @@
       <div class="panel original-panel" id="originalPanel">
         <div class="panel-header">
           원본 페이지
-          <span class="panel-badge" id="clickBadge">클릭으로 복사</span>
+          <div style="display: flex; gap: 6px; align-items: center">
+            <div class="zoom-ctrl">
+              <button class="zoom-btn" id="origZoomOut" title="축소">−</button>
+              <input
+                class="zoom-input"
+                id="origZoomLabel"
+                value="100"
+                title="비율 직접 입력 후 Enter"
+              />
+              <button class="zoom-btn" id="origZoomIn" title="확대">+</button>
+            </div>
+          </div>
         </div>
         <div class="body">
           <div class="loading" id="loadingOverlay">
@@ -78,8 +89,23 @@
       <div class="panel editor-panel" id="editorPanel">
         <div class="panel-header">
           편집 화면
-          <div style="display:flex;gap:6px;align-items:center;">
-            <button class="btn btn-outline btn-diff-toggle active" id="diffToggleBtn">수정 표시 ON</button>
+          <div style="display: flex; gap: 6px; align-items: center">
+            <div class="zoom-ctrl">
+              <button class="zoom-btn" id="editZoomOut" title="축소">−</button>
+              <input
+                class="zoom-input"
+                id="editZoomLabel"
+                value="100"
+                title="비율 직접 입력 후 Enter"
+              />
+              <button class="zoom-btn" id="editZoomIn" title="확대">+</button>
+            </div>
+            <button
+              class="btn btn-outline btn-diff-toggle active"
+              id="diffToggleBtn"
+            >
+              수정 표시 ON
+            </button>
             <button class="btn btn-outline" id="clearBtn">전체 지우기</button>
           </div>
         </div>
@@ -287,7 +313,9 @@
         </div>
 
         <!-- 편집 영역 -->
-        <iframe id="editorFrame"></iframe>
+        <div class="frame-zoom-wrap" id="editFrameWrap">
+          <iframe id="editorFrame"></iframe>
+        </div>
 
         <!-- 상태 바 -->
         <div class="status-bar">
