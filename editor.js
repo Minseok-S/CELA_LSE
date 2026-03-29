@@ -9,6 +9,13 @@
   var loadBtn = document.getElementById("loadBtn");
   var exportBtn = document.getElementById("exportBtn");
   var clearBtn = document.getElementById("clearBtn");
+  var tabUrl = document.getElementById("tabUrl");
+  var tabFile = document.getElementById("tabFile");
+  var urlBar = document.getElementById("urlBar");
+  var fileBar = document.getElementById("fileBar");
+  var fileInput = document.getElementById("fileInput");
+  var fileName = document.getElementById("fileName");
+  var fileLoadBtn = document.getElementById("fileLoadBtn");
   var loadingOverlay = document.getElementById("loadingOverlay");
   var placeholder = document.getElementById("placeholder");
   var frame = document.getElementById("originalFrame");
@@ -62,7 +69,7 @@
   };
 
   /* ════════════════════════════════
-     URL 불러오기 (공통)
+     URL 불러오기
   ════════════════════════════════ */
   function loadPage() {
     var url = urlInput.value.trim();
@@ -72,12 +79,6 @@
   }
 
   function fetchBoth(url) {
-    // 상태 초기화
-    origReady = false;
-    editReady = false;
-    editorSnapshot = null;
-    if (diffObserver) { diffObserver.disconnect(); diffObserver = null; }
-
     loadBtn.disabled = true;
     loadBtn.textContent = "로딩 중...";
     loadingOverlay.classList.add("active");
@@ -86,7 +87,6 @@
     frame.style.display = "none";
     editorFrame.style.display = "none";
 
-    // 양쪽 패널 모두 같은 프록시 HTML 사용 → 미러링 가능
     fetch(PROXY + encodeURIComponent(url))
       .then(function (res) {
         if (!res.ok) throw new Error("프록시 응답 오류: " + res.status);
@@ -94,23 +94,7 @@
       })
       .then(function (html) {
         if (!html) throw new Error("페이지 내용을 가져오지 못했습니다.");
-
-        // 왼쪽: 미러링 스크립트 + 링크 내비게이션 주입
-        frame.onload = function () {
-          frame.onload = null;
-          try { injectDiffCSS(frame.contentDocument, false); } catch (e) {}
-          origReady = true;
-          tryInitDiff();
-        };
-        frame.srcdoc = injectHighlight(html, url);
-        frame.style.display = "block";
-        clickHint.classList.add("active");
-        clickBadge.classList.add("visible");
-
-        // 오른쪽: 편집기
-        setupEditorFrame(html, url);
-
-        setStatus("페이지 로드 완료 — 원본 링크 클릭 시 양쪽 동시 이동");
+        loadBothPanels(html, url, "페이지 로드 완료 — 원본 링크 클릭 시 양쪽 동시 이동");
       })
       .catch(function (err) {
         errorBanner.textContent =
@@ -124,6 +108,76 @@
         loadBtn.disabled = false;
         loadBtn.textContent = "불러오기";
       });
+  }
+
+  /* ════════════════════════════════
+     파일 업로드 불러오기
+  ════════════════════════════════ */
+  function loadFromFile() {
+    var file = fileInput.files[0];
+    if (!file) { alert("파일을 선택해주세요."); return; }
+
+    fileLoadBtn.disabled = true;
+    fileLoadBtn.textContent = "로딩 중...";
+    loadingOverlay.classList.add("active");
+    errorBanner.classList.remove("active");
+    placeholder.style.display = "none";
+    frame.style.display = "none";
+    editorFrame.style.display = "none";
+
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var html = e.target.result;
+      if (!html) {
+        errorBanner.textContent = "⚠ 파일을 읽을 수 없습니다.";
+        errorBanner.classList.add("active");
+        placeholder.style.display = "flex";
+        loadingOverlay.classList.remove("active");
+        fileLoadBtn.disabled = false;
+        fileLoadBtn.textContent = "불러오기";
+        return;
+      }
+      loadBothPanels(html, "", "파일 로드 완료");
+      loadingOverlay.classList.remove("active");
+      fileLoadBtn.disabled = false;
+      fileLoadBtn.textContent = "불러오기";
+    };
+    reader.onerror = function () {
+      errorBanner.textContent = "⚠ 파일 읽기 오류가 발생했습니다.";
+      errorBanner.classList.add("active");
+      placeholder.style.display = "flex";
+      loadingOverlay.classList.remove("active");
+      fileLoadBtn.disabled = false;
+      fileLoadBtn.textContent = "불러오기";
+    };
+    reader.readAsText(file, "UTF-8");
+  }
+
+  /* ════════════════════════════════
+     양쪽 패널 공통 로드
+  ════════════════════════════════ */
+  function loadBothPanels(html, baseUrl, statusMsg) {
+    origReady = false;
+    editReady = false;
+    editorSnapshot = null;
+    if (diffObserver) { diffObserver.disconnect(); diffObserver = null; }
+
+    // 왼쪽: 미러링 스크립트 + 링크 내비게이션 주입
+    frame.onload = function () {
+      frame.onload = null;
+      try { injectDiffCSS(frame.contentDocument, false); } catch (e) {}
+      origReady = true;
+      tryInitDiff();
+    };
+    frame.srcdoc = injectHighlight(html, baseUrl);
+    frame.style.display = "block";
+    clickHint.classList.add("active");
+    clickBadge.classList.add("visible");
+
+    // 오른쪽: 편집기
+    setupEditorFrame(html, baseUrl);
+
+    setStatus(statusMsg);
   }
 
   /* ════════════════════════════════
@@ -582,9 +636,64 @@
   loadBtn.addEventListener("click", loadPage);
   exportBtn.addEventListener("click", exportHTML);
   clearBtn.addEventListener("click", clearEditor);
+  fileLoadBtn.addEventListener("click", loadFromFile);
 
   urlInput.addEventListener("keydown", function (e) {
     if (e.key === "Enter") loadPage();
+  });
+
+  // 탭 전환
+  tabUrl.addEventListener("click", function () {
+    tabUrl.classList.add("active");
+    tabFile.classList.remove("active");
+    urlBar.style.display = "";
+    fileBar.classList.remove("active");
+  });
+
+  tabFile.addEventListener("click", function () {
+    tabFile.classList.add("active");
+    tabUrl.classList.remove("active");
+    urlBar.style.display = "none";
+    fileBar.classList.add("active");
+  });
+
+  // 파일 선택 시 이름 표시
+  fileInput.addEventListener("change", function () {
+    fileName.textContent = fileInput.files[0] ? fileInput.files[0].name : "선택된 파일 없음";
+  });
+
+  // 원본 패널 드래그앤드롭
+  var originalBody = document.querySelector(".original-panel .body");
+
+  originalBody.addEventListener("dragover", function (e) {
+    e.preventDefault();
+    originalBody.classList.add("drag-over");
+  });
+
+  originalBody.addEventListener("dragleave", function (e) {
+    if (!originalBody.contains(e.relatedTarget)) {
+      originalBody.classList.remove("drag-over");
+    }
+  });
+
+  originalBody.addEventListener("drop", function (e) {
+    e.preventDefault();
+    originalBody.classList.remove("drag-over");
+    var file = e.dataTransfer.files[0];
+    if (!file) return;
+    if (!/\.html?$/i.test(file.name)) {
+      alert("HTML 파일(.html, .htm)만 업로드할 수 있습니다.");
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      var html = ev.target.result;
+      if (!html) return;
+      loadingOverlay.classList.add("active");
+      loadBothPanels(html, "", "파일 로드 완료 — " + file.name);
+      loadingOverlay.classList.remove("active");
+    };
+    reader.readAsText(file, "UTF-8");
   });
 
   // 툴바 버튼: mousedown+preventDefault로 iframe 포커스 유지

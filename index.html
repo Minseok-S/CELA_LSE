@@ -10,7 +10,11 @@
     <!-- ── Header ── -->
     <div class="header">
       <span class="logo">📋 동의서 편집기</span>
-      <div class="url-bar">
+      <div class="input-tabs">
+        <button class="tab-btn active" id="tabUrl">URL</button>
+        <button class="tab-btn" id="tabFile">파일 업로드</button>
+      </div>
+      <div class="url-bar" id="urlBar">
         <input
           type="text"
           class="url-input"
@@ -19,6 +23,12 @@
         />
         <button class="btn btn-primary" id="loadBtn">불러오기</button>
         <span class="proxy-note">CORS 프록시 사용</span>
+      </div>
+      <div class="file-bar" id="fileBar">
+        <label class="btn btn-file" for="fileInput">파일 선택</label>
+        <input type="file" id="fileInput" accept=".html,.htm" />
+        <span class="file-name" id="fileName">선택된 파일 없음</span>
+        <button class="btn btn-primary" id="fileLoadBtn">불러오기</button>
       </div>
       <button class="btn btn-success" id="exportBtn">HTML 내보내기</button>
     </div>
@@ -49,7 +59,7 @@
               <rect x="2" y="3" width="20" height="14" rx="2" />
               <path d="M8 21h8M12 17v4" />
             </svg>
-            <p>위 입력창에 URL을 입력하고<br />「불러오기」를 클릭하세요</p>
+            <p>URL을 입력하거나 HTML 파일을 업로드하세요</p>
           </div>
           <iframe
             id="originalFrame"
