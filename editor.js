@@ -29,6 +29,7 @@
   var diffTimer = null;
   var origReady = false;
   var editReady = false;
+  var diffEnabled = true;
 
   /* ── 미러링 클릭 플래그 (제한 핸들러 우회용) ── */
   var isMirrorClick = false;
@@ -325,7 +326,7 @@
     var snap = {};
     for (var i = 0; i < body.children.length; i++) {
       (function walk(el, path) {
-        if (BLOCK[el.tagName]) snap[path] = el.innerHTML;
+        snap[path] = el.innerHTML;
         for (var j = 0; j < el.children.length; j++) {
           walk(el.children[j], path + "/" + j);
         }
@@ -338,6 +339,7 @@
      Diff 실행 (디바운스)
   ════════════════════════════════ */
   function scheduleDiff() {
+    if (!diffEnabled) return;
     if (diffTimer) clearTimeout(diffTimer);
     diffTimer = setTimeout(runDiff, 350);
   }
@@ -565,6 +567,18 @@
   /* ════════════════════════════════
      이벤트 연결
   ════════════════════════════════ */
+  document.getElementById("diffToggleBtn").addEventListener("click", function () {
+    diffEnabled = !diffEnabled;
+    this.textContent = diffEnabled ? "수정 표시 ON" : "수정 표시 OFF";
+    this.classList.toggle("active", diffEnabled);
+    if (diffEnabled) {
+      runDiff();
+    } else {
+      try { clearMarkers(editorFrame.contentDocument); } catch (e) {}
+      try { clearMarkers(frame.contentDocument); } catch (e) {}
+    }
+  });
+
   loadBtn.addEventListener("click", loadPage);
   exportBtn.addEventListener("click", exportHTML);
   clearBtn.addEventListener("click", clearEditor);

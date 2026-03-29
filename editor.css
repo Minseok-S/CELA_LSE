@@ -77,6 +77,9 @@ body {
 
 .btn-outline:hover { border-color: #e94560; color: #e94560; }
 
+.btn-diff-toggle.active { border-color: #e94560; color: #e94560; background: rgba(233,69,96,.08); }
+.btn-diff-toggle:not(.active) { border-color: #4a5068; color: #4a5068; }
+
 /* ── Workspace ── */
 .workspace {
   display: flex;
