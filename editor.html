@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>개인정보 동의서 편집기</title>
+  <link rel="stylesheet" href="editor.css">
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="header">
+  <span class="logo">📋 동의서 편집기</span>
+  <div class="url-bar">
+    <input
+      type="text"
+      class="url-input"
+      id="urlInput"
+      placeholder="URL 입력 (예: https://naver.com/privacy)"
+    />
+    <button class="btn btn-primary" id="loadBtn">불러오기</button>
+    <span class="proxy-note">CORS 프록시 사용</span>
+  </div>
+  <button class="btn btn-success" id="exportBtn">HTML 내보내기</button>
+</div>
+
+<!-- ── Workspace ── -->
+<div class="workspace" id="workspace">
+
+  <!-- 원본 패널 -->
+  <div class="panel original-panel" id="originalPanel">
+    <div class="panel-header">
+      원본 페이지
+      <span class="panel-badge" id="clickBadge">클릭으로 복사</span>
+    </div>
+    <div class="body">
+      <div class="loading" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>페이지를 불러오는 중...</p>
+      </div>
+      <div class="error-banner" id="errorBanner"></div>
+      <div class="placeholder" id="placeholder">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#718096" stroke-width="1.5">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <path d="M8 21h8M12 17v4"/>
+        </svg>
+        <p>위 입력창에 URL을 입력하고<br>「불러오기」를 클릭하세요</p>
+      </div>
+      <iframe
+        id="originalFrame"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+      ></iframe>
+    </div>
+    <div class="click-hint" id="clickHint">
+      ✦ 원본 링크 클릭 시 양쪽 화면이 동시에 이동합니다.
+    </div>
+  </div>
+
+  <!-- 분할선 -->
+  <div class="divider" id="divider"></div>
+
+  <!-- 편집 패널 -->
+  <div class="panel editor-panel" id="editorPanel">
+    <div class="panel-header">
+      편집 화면
+      <button class="btn btn-outline" id="clearBtn">전체 지우기</button>
+    </div>
+
+    <!-- 툴바 -->
+    <div class="toolbar">
+
+      <!-- 텍스트 스타일 -->
+      <button class="tb-btn" data-cmd="bold" title="굵게 (Ctrl+B)"><b>B</b></button>
+      <button class="tb-btn" data-cmd="italic" title="기울임 (Ctrl+I)"><i>I</i></button>
+      <button class="tb-btn" data-cmd="underline" title="밑줄 (Ctrl+U)"><u>U</u></button>
+      <button class="tb-btn" data-cmd="strikeThrough" title="취소선"><s>S</s></button>
+
+      <div class="tb-sep"></div>
+
+      <!-- 크기 / 글꼴 -->
+      <select class="tb-select" id="sizeSelect" title="글자 크기">
+        <option value="">크기</option>
+        <option value="1">10px</option>
+        <option value="2">12px</option>
+        <option value="3">14px</option>
+        <option value="4">16px</option>
+        <option value="5">18px</option>
+        <option value="6">24px</option>
+        <option value="7">32px</option>
+      </select>
+
+      <select class="tb-select" id="fontSelect" title="글꼴" style="width:90px;">
+        <option value="">글꼴</option>
+        <option value="Apple SD Gothic Neo">애플고딕</option>
+        <option value="Noto Sans KR">Noto Sans</option>
+        <option value="Malgun Gothic">맑은고딕</option>
+        <option value="Nanum Gothic">나눔고딕</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Courier New">Courier</option>
+      </select>
+
+      <div class="tb-sep"></div>
+
+      <!-- 색상 -->
+      <div class="tb-color-wrap" title="글자 색상">
+        <span>A</span>
+        <input type="color" class="tb-color" id="textColor" value="#000000">
+      </div>
+      <div class="tb-color-wrap" title="형광펜 색상">
+        <span>BG</span>
+        <input type="color" class="tb-color" id="bgColor" value="#ffff00">
+      </div>
+
+      <div class="tb-sep"></div>
+
+      <!-- 정렬 -->
+      <button class="tb-btn" data-cmd="justifyLeft" title="왼쪽 정렬">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <button class="tb-btn" data-cmd="justifyCenter" title="가운데 정렬">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
+        </svg>
+      </button>
+      <button class="tb-btn" data-cmd="justifyRight" title="오른쪽 정렬">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="6" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+
+      <div class="tb-sep"></div>
+
+      <!-- 목록 -->
+      <button class="tb-btn" data-cmd="insertUnorderedList" title="글머리 목록">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/>
+          <circle cx="4" cy="6" r="1.5" fill="currentColor"/>
+          <circle cx="4" cy="12" r="1.5" fill="currentColor"/>
+          <circle cx="4" cy="18" r="1.5" fill="currentColor"/>
+        </svg>
+      </button>
+      <button class="tb-btn" data-cmd="insertOrderedList" title="번호 목록">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+
+      <div class="tb-sep"></div>
+
+      <!-- 들여쓰기 -->
+      <button class="tb-btn" data-cmd="outdent" title="내어쓰기">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="11 17 6 12 11 7"/><line x1="6" y1="12" x2="18" y2="12"/>
+        </svg>
+      </button>
+      <button class="tb-btn" data-cmd="indent" title="들여쓰기">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="13 17 18 12 13 7"/><line x1="6" y1="12" x2="18" y2="12"/>
+        </svg>
+      </button>
+
+      <div class="tb-sep"></div>
+
+      <!-- 단락 형식 -->
+      <select class="tb-select" id="blockSelect" title="단락 형식">
+        <option value="">단락</option>
+        <option value="h1">제목 1</option>
+        <option value="h2">제목 2</option>
+        <option value="h3">제목 3</option>
+        <option value="p">본문</option>
+        <option value="blockquote">인용</option>
+        <option value="pre">코드</option>
+      </select>
+
+      <div class="tb-sep"></div>
+
+      <button class="tb-btn" data-cmd="removeFormat" title="서식 제거"
+              style="font-size:10px; width:auto; padding:0 6px;">지우기</button>
+    </div>
+
+    <!-- 편집 영역 -->
+    <iframe id="editorFrame"></iframe>
+
+    <!-- 상태 바 -->
+    <div class="status-bar">
+      <span id="statusText">준비</span>
+      <span id="charCount">0자</span>
+    </div>
+  </div>
+
+</div>
+
+<script src="editor.js"></script>
+</body>
+</html>
