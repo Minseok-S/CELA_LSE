@@ -87,10 +87,19 @@
     frame.style.display = "none";
     editorFrame.style.display = "none";
 
-    fetch(PROXY + encodeURIComponent(url))
+    // 직접 fetch 먼저 시도 (내부망 등 프록시 없이 접근 가능한 경우)
+    fetch(url, { mode: "cors" })
       .then(function (res) {
-        if (!res.ok) throw new Error("프록시 응답 오류: " + res.status);
+        if (!res.ok) throw new Error("직접 접근 응답 오류: " + res.status);
         return res.text();
+      })
+      .catch(function () {
+        // 직접 fetch 실패 시 외부 CORS 프록시로 폴백
+        return fetch(PROXY + encodeURIComponent(url))
+          .then(function (res) {
+            if (!res.ok) throw new Error("프록시 응답 오류: " + res.status);
+            return res.text();
+          });
       })
       .then(function (html) {
         if (!html) throw new Error("페이지 내용을 가져오지 못했습니다.");
